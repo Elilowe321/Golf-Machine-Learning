@@ -1,0 +1,207 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 350px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 20px;
+    position: relative;
+    margin-top: 20px;
+}
+
+.title {
+    font-size: 28px;
+    color: royalblue;
+    font-weight: 600;
+    letter-spacing: -1px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-left: 30px;
+}
+
+    .title::before, .title::after {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        left: 0px;
+        background-color: royalblue;
+    }
+
+    .title::before {
+        width: 18px;
+        height: 18px;
+        background-color: royalblue;
+    }
+
+    .title::after {
+        width: 18px;
+        height: 18px;
+        animation: pulse 1s linear infinite;
+    }
+
+.message, .signin {
+    color: rgba(88, 87, 87, 0.822);
+    font-size: 14px;
+}
+
+.signin {
+    text-align: center;
+}
+
+    .signin a {
+        color: royalblue;
+    }
+
+        .signin a:hover {
+            text-decoration: underline royalblue;
+        }
+
+.flex {
+    display: flex;
+    width: 100%;
+    gap: 6px;
+}
+
+.form label {
+    position: relative;
+}
+
+    .form label .input {
+        width: 100%;
+        padding: 10px 10px 20px 10px;
+        outline: 0;
+        border: 1px solid rgba(105, 105, 105, 0.397);
+        border-radius: 10px;
+    }
+
+        .form label .input + span {
+            position: absolute;
+            left: 10px;
+            top: 15px;
+            color: grey;
+            font-size: 0.9em;
+            cursor: text;
+            transition: 0.3s ease;
+        }
+
+        .form label .input:placeholder-shown + span {
+            top: 15px;
+            font-size: 0.9em;
+        }
+
+        .form label .input:focus + span, .form label .input:valid + span {
+            top: 30px;
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+
+        .form label .input:valid + span {
+            color: green;
+        }
+
+.submit {
+    --glow-color: rgb(65,105,225);
+    --btn-color: rgba(13, 241, 21, 0.508);
+    border: .25em solid var(--glow-color);
+    padding: 1em 2em;
+    color: var(--glow-color);
+    font-size: 14px;
+    font-weight: bold;
+    background-color: var(--btn-color);
+    border-radius: 1em;
+    outline: none;
+    box-shadow: 0 0 1em .25em var(--glow-color), 0 0 4em 1em var(--glow-spread-color), inset 0 0 .05em .25em var(--glow-color);
+    text-shadow: 0 0 .5em var(--glow-color);
+    position: relative;
+    transition: all 0.3s;
+}
+
+    .submit::after {
+        pointer-events: none;
+        content: "";
+        position: absolute;
+        top: 120%;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background-color: var(--glow-spread-color);
+        filter: blur(2em);
+        opacity: .7;
+        transform: perspective(1.5em) rotateX(35deg) scale(1, .6);
+    }
+
+    .submit:active {
+        box-shadow: 0 0 0.6em .25em var(--glow-color), 0 0 2.5em 2em var(--glow-spread-color), inset 0 0 .5em .25em var(--glow-color);
+    }
+
+    .submit:hover {
+        color: var(--btn-color);
+        background-color: var(--glow-color);
+        box-shadow: 0 0 1em .25em var(--glow-color), 0 0 4em 2em var(--glow-spread-color), inset 0 0 .75em .25em var(--glow-color);
+    }
+
+@keyframes pulse {
+    from {
+        transform: scale(0.9);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(1.8);
+        opacity: 0;
+    }
+}
+
+*,
+*::before,
+*::after{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+}
+
+ul{
+    padding: 15px;
+    border: 1px solid black;
+    display: flex;
+    gap: 72px;
+}
+
+ul li{
+    list-style: none;
+}
+
+ul li a{
+    font-size: 26px;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: black;
+    padding: 10px;
+    transition: 0.5 ease;
+}
+
+    ul:hover {
+        border: 3px solid #4169e1;
+    }
+
+        ul:hover li a {
+            color: #4169e1;
+            animation: glowing 1s ease-in-out infinite alternate;
+        }
+
+ul:hover li a:not(:hover){
+    color: black;
+    opacity: 0.3;
+    filter: blur(1px);
+}

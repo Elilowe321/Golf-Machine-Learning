@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Input</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+</head>
+
+<body>
+    <nav>
+
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/results">Results</a></li>
+            <li><a href="#">Service</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+
+    </nav>
+
+    <!-- Got from https://uiverse.io -->
+    <form class="form" method="POST" action="/results">
+        <p class="title">Best Betting Sim </p>
+        <p class="message">Not 100% Accurate Yet</p>
+        <div class="flex">
+            <label>
+                <input required="" placeholder="" type="text" class="input" name="full_name">
+                <span>Full Name</span>
+            </label>
+        </div>
+
+        <label>
+            <input required="" placeholder="" type="number" class="input" name="year">
+            <span>Year</span>
+        </label>
+
+        <label>
+            <input required="" placeholder="" type="number" class="input" name="day1">
+            <span>Day 1</span>
+        </label>
+
+        <label>
+            <input required="" placeholder="" type="number" class="input" name="day2">
+            <span>Day 2</span>
+        </label>
+        <label>
+            <input required="" placeholder="" type="number" class="input" name="day3">
+            <span>Day 3</span>
+        </label>
+        <button class="submit">Submit</button>
+    </form>
+
+</body>
+</html>
