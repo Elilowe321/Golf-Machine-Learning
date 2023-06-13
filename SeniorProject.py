@@ -242,7 +242,7 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
 
     first_name_initial = names[0][0]  # Extract the first letter of the first name
     last_name = names[-1] 
-    csv_file = first_name_initial + "." + last_name + ".csv"
+    csv_file = "CSV Folder/" + first_name_initial + "." + last_name + ".csv"
     course_data = pd.read_csv("CourseData.csv")
     
     #Already existing file for player
@@ -352,7 +352,7 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
                                     tournament_array.append(tournament_obj)
                             
                 #Put data into csv file
-                filename = player_obj.name + ".csv"
+                filename = "CSV Folder/" + player_obj.name + ".csv"
                 fieldnames = ["Tournament Name", "day1", "day2", "day3", "day4", "Yardage", "Par", "Rating"]
                 already_written = {}
                 with open(filename, mode="w", newline="") as file:
@@ -386,7 +386,7 @@ def main():
     # Prompt the user for input
 
 
-    target_player_full_name = "Collin Morikawa"
+    target_player_full_name = "Sam Burns"
     target_year = 2023
     day1 = 70
     day2 = 70
