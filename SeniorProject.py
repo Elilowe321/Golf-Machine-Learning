@@ -229,6 +229,7 @@ def predictions(filename, day1, day2, day3, fullname, tournament_name):
     #return svr_model_prediction[0]
 
     #MLP does different values every time
+    """
     print("Linear Regression Model = ", str(linear_regression_model_prediction[0]))
     print("Random Forest Classifier Model = ", str(random_forest_classifier_model_prediction[0]), "\nRandom Forest Regressor Model = ", str(random_forest_regressor_model_prediction[0]))
     print("Gradien Boosting Classifier Model = ", str(gradien_boosting_classifier_model_prediction[0]), "\nGradient Boosting Regressor Model = ", str(gradient_boosting_regressor_model_prediction[0]))
@@ -239,9 +240,11 @@ def predictions(filename, day1, day2, day3, fullname, tournament_name):
     print("Random Forest Average = ", random_forest_average)
     print("Gradient Boosting Avergae = ", gradient_boosting_average)
     print("SVM Average = ", SVM_average)
-    print("LGBM Average = ", LGBM_average)
+    
 
     print("Total Average = " , average)
+    """
+    print("LGBM Average = ", LGBM_average)
 
 def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name):
 
@@ -355,7 +358,10 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
                                         setattr(tournament_obj, f"day{i+1}", strokes_data["strokes"])
 
                                     tournament_array.append(tournament_obj)
-                            
+                if(len(tournament_array) < 2):
+                    error = "Not enough Data"
+                    return error
+
                 #Put data into csv file
                 filename = "CSV Folder/" + player_obj.name + ".csv"
                 fieldnames = ["Tournament Name", "day1", "day2", "day3", "day4", "Yardage", "Par", "Rating"]
@@ -400,9 +406,9 @@ def scrape_data():
         player_data = player()
         player_data.name = row['PLAYER']
         player_data.score = row['SCORE']
-        #player_data.r1 = row['R1']
-        #player_data.r2 = row['R2']
-        #player_data.r3 = row['R3']
+        player_data.r1 = row['R1']
+        player_data.r2 = row['R2']
+        player_data.r3 = row['R3']
 
         players.append(player_data)
 
@@ -418,7 +424,7 @@ def main():
     players = scrape_data()
     tournament_name = "U.S. Open"
     for player in players:
-        #print(player.name, player.score)
+        #print(player.name, player.r1)
         data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, tournament_name)
     
     """
