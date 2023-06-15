@@ -358,7 +358,8 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
                                         setattr(tournament_obj, f"day{i+1}", strokes_data["strokes"])
 
                                     tournament_array.append(tournament_obj)
-                if(len(tournament_array) < 2):
+                if(len(tournament_array) < 3):
+                    print(len(tournament_array))
                     error = "Not enough Data"
                     return error
 
@@ -421,6 +422,7 @@ def scrape_data():
 def main():
     # Prompt the user for input
     
+    """
     players = scrape_data()
     tournament_name = "U.S. Open"
     for player in players:
@@ -428,14 +430,15 @@ def main():
         data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, tournament_name)
     
     """
-    target_player_full_name = "Sam Burns"
+    
+    target_player_full_name = "Phil Mickelson"
     target_year = 2023
     tournament_name = "U.S. Open"
     day1 = 70
     day2 = 70
     day3 = 67
     data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name)
-    """
+    
     
 # Call the main function to start the program
 if __name__ == "__main__":
