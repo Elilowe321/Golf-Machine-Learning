@@ -13,41 +13,48 @@ from sklearn.svm import SVC, SVR
 from lightgbm import LGBMClassifier, LGBMRegressor
 
 #TODO:: Clean names
-class player1:
 
+class player:
 
     def __init__(self):
         self.name = None
-        self.height = None
-        self.weight = None
-        self.country = None
+        self.score = None
+        self.r1 = None
+        self.r2 = None
+        self.r3 = None
         self.id = None
 
     #Print out obj
     def __str__(self):
-        return f"player(name={self.name}, height={self.height}, weight={self.weight}, country={self.country}, id={self.id})"
+        return f"player(name={self.name} )"
 
     #Getter methods
     def get_name(self):
         return self.name
-    def get_height(self):
-        return self.height
-    def get_weight(self):
-        return self.weight
-    def get_country(self):
-        return self.country
+    def get_score(self):
+        return self.score
+    def get_r1(self):
+        return self.r1
+    def get_r2(self):
+        return self.r2
+    def get_r3(self):
+        return self.r3
     def get_id(self):
         return self.id
 
     #Setter methods
     def name(self, value):
         self.name = value
-    def height(self, value):
-        self.height = value
+    def score(self, value):
+        self.score = value
     def weight(self, value):
         self.weight = value
-    def country(self, value):
-        self.country = value
+    def r1(self, value):
+        self.r1 = value
+    def r2(self, value):
+        self.r2 = value
+    def r3(self, value):
+        self.r3 = value
     def id(self, value):
         self.id = value
 
@@ -235,12 +242,12 @@ def predictions(filename, day1, day2, day3, fullname, tournament_name):
     print("LGBM Average = ", LGBM_average)
 
     print("Total Average = " , average)
-    
 
 def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name):
 
     names = target_player_full_name.split()  # Split the full name by whitespace
-
+    
+    #TODO::Might not work with people with three names eg. Si Woo Kim
     first_name_initial = names[0][0]  # Extract the first letter of the first name
     last_name = names[-1] 
     csv_file = "CSV Folder/" + first_name_initial + "." + last_name + ".csv"
@@ -256,11 +263,10 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
         #API for player ids
         print("Loading Model...")
 
-        #TODO::Find way to get all player ids
         req_id = requests.get('http://api.sportradar.us/golf/trial/pga/v3/en/2023/players/profiles.json?api_key=ya2hjdx7bs68uk7mg8heexkw')
         time.sleep(1) # Wait for 1 second (can't do multiple api calls at once)
 
-        player_obj = player1()
+        player_obj = player()
 
         # Successful request
         if(req_id.status_code == 200): 
@@ -271,6 +277,7 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
                 if(target_player_full_name == i["first_name"] + " " + i["last_name"]):
                     player_obj.name = i["abbr_name"]
                     player_obj.id = i["id"]
+                    
             print(player_obj.name)
         #Player not found
         if player_obj.name is None:
@@ -332,18 +339,15 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
                                 tournament_obj.name = tournament["name"]
 
                                 if(tournament_obj.name in course_data["Tournament Name"].values):
-                                    print(tournament_obj.name)
                                    
                                     filtered_rows = course_data[course_data['Tournament Name'] == tournament_obj.name]
+                                    tournament_obj.id = tournament["id"]
 
                                     # Iterate over the filtered rows and assign values to variables
                                     for index, row in filtered_rows.iterrows():
                                         tournament_obj.yardage = row['Yardage']
                                         tournament_obj.par = row['Par']
                                         tournament_obj.rating = row['Rating']
-                                
-
-                                    tournament_obj.id = tournament["id"]
 
                                     #Get strokes and stuff
                                     for i in range(0, 4):
@@ -380,46 +384,6 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
 
             return predictions(filename, day1, day2, day3, target_player_full_name, tournament_name)
 
-
-
-class player:
-
-    def __init__(self):
-        self.name = None
-        self.score = None
-        self.r1 = None
-        self.r2 = None
-        self.r3 = None
-
-    #Print out obj
-    def __str__(self):
-        return f"player(name={self.name} )"
-
-    #Getter methods
-    def get_name(self):
-        return self.name
-    def get_score(self):
-        return self.score
-    def get_r1(self):
-        return self.r1
-    def get_r2(self):
-        return self.r2
-    def get_r3(self):
-        return self.r3
-
-    #Setter methods
-    def name(self, value):
-        self.name = value
-    def score(self, value):
-        self.score = value
-    def weight(self, value):
-        self.weight = value
-    def r1(self, value):
-        self.r1 = value
-    def r2(self, value):
-        self.r2 = value
-    def r3(self, value):
-        self.r3 = value
 def scrape_data():
     #Get leaderboad through espn
     url = 'https://www.espn.com/golf/leaderboard'
@@ -450,20 +414,23 @@ def scrape_data():
 # Define the main function
 def main():
     # Prompt the user for input
+    
     players = scrape_data()
     tournament_name = "U.S. Open"
     for player in players:
-        print(player.name, player.score)
-        #data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, tournament_name)
-
+        #print(player.name, player.score)
+        data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, tournament_name)
+    
     """
     target_player_full_name = "Sam Burns"
     target_year = 2023
+    tournament_name = "U.S. Open"
     day1 = 70
     day2 = 70
     day3 = 67
     data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name)
     """
+    
 # Call the main function to start the program
 if __name__ == "__main__":
     main()
