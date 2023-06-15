@@ -5,14 +5,15 @@ import json
 import csv
 import os
 import pandas as pd
+from bs4 import BeautifulSoup
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.svm import SVC, SVR
 from lightgbm import LGBMClassifier, LGBMRegressor
-import joblib
 
-class player:
+#TODO:: Clean names
+class player1:
 
 
     def __init__(self):
@@ -259,7 +260,7 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
         req_id = requests.get('http://api.sportradar.us/golf/trial/pga/v3/en/2023/players/profiles.json?api_key=ya2hjdx7bs68uk7mg8heexkw')
         time.sleep(1) # Wait for 1 second (can't do multiple api calls at once)
 
-        player_obj = player()
+        player_obj = player1()
 
         # Successful request
         if(req_id.status_code == 200): 
@@ -381,22 +382,88 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
 
 
 
+class player:
+
+    def __init__(self):
+        self.name = None
+        self.score = None
+        self.r1 = None
+        self.r2 = None
+        self.r3 = None
+
+    #Print out obj
+    def __str__(self):
+        return f"player(name={self.name} )"
+
+    #Getter methods
+    def get_name(self):
+        return self.name
+    def get_score(self):
+        return self.score
+    def get_r1(self):
+        return self.r1
+    def get_r2(self):
+        return self.r2
+    def get_r3(self):
+        return self.r3
+
+    #Setter methods
+    def name(self, value):
+        self.name = value
+    def score(self, value):
+        self.score = value
+    def weight(self, value):
+        self.weight = value
+    def r1(self, value):
+        self.r1 = value
+    def r2(self, value):
+        self.r2 = value
+    def r3(self, value):
+        self.r3 = value
+def scrape_data():
+    #Get leaderboad through espn
+    url = 'https://www.espn.com/golf/leaderboard'
+    response = requests.get(url)
+    html = response.text
+    soup = BeautifulSoup(html, 'html.parser')
+    dfs = pd.read_html(url, header = 0)
+    data = dfs[-1] #this is leaderboard
+
+
+    #loop through and add player to array
+    players = []
+    for index, row in data.iterrows():
+        player_data = player()
+        player_data.name = row['PLAYER']
+        player_data.score = row['SCORE']
+        #player_data.r1 = row['R1']
+        #player_data.r2 = row['R2']
+        #player_data.r3 = row['R3']
+
+        players.append(player_data)
+
+        if index == 71:
+            break
+
+    return players
+
 # Define the main function
 def main():
     # Prompt the user for input
+    players = scrape_data()
+    tournament_name = "U.S. Open"
+    for player in players:
+        print(player.name, player.score)
+        #data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, tournament_name)
 
-
+    """
     target_player_full_name = "Sam Burns"
     target_year = 2023
     day1 = 70
     day2 = 70
     day3 = 67
-    tournament_name = "U.S. Open"
-
-    # Call the data_retrieval function
-    #print(data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name))
     data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name)
-
+    """
 # Call the main function to start the program
 if __name__ == "__main__":
     main()
