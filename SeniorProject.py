@@ -133,10 +133,22 @@ def predictions(filename, day1, day2, day3, fullname, tournament_name):
     rating_value = tourney_rating[0]
 
     # Split the data into features (first three rounds) and target variable (fourth game outcome)
-    #X = data[['day1', 'day2', 'day3', 'Yardage', 'Par', 'Rating']]
-    #y = data['day4']
+    #=========Day1==========
     X = data[['Yardage', 'Par', 'Rating']]
     y = data['day1']
+
+    #==========Day2==========
+    #X = data[['Day1', 'Yardage', 'Par', 'Rating']]
+    #y = data['day2']
+
+    #==========Day3==========
+    #X = data[['Day1', 'Day2', 'Yardage', 'Par', 'Rating']]
+    #y = data['day3']
+
+    #==========Day4==========
+    #X = data[['day1', 'day2', 'day3', 'Yardage', 'Par', 'Rating']]
+    #y = data['day4']
+    
 
     # Split the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.1, random_state=42)
@@ -188,10 +200,10 @@ def predictions(filename, day1, day2, day3, fullname, tournament_name):
 
     average = (linear_average + random_forest_average + gradient_boosting_average + LGBM_average + SVM_average) / 5
 
-    filename = "FirstRoundPredictionsTest.csv"
+    filename = "FirstRoundPredictions.csv"
     fieldnames = ["Name", "Lin Regression", "Random Forest Class", "Random Forest Regress", "Gradien Boost Class", "Gradien Boost Regress",
                   "SVC", "SVR", "LGBMClass", "LGBMRegress", "Linear Ave", "Random Forest Ave", "Gradien Boost Ave", "SVM Ave", 
-                  "LGBM Ave", "Total Ave"]
+                  "LGBM Ave", "Total Ave", "R1", "R2", "R3"]
     
 
     # Check if the file is empty
@@ -221,7 +233,10 @@ def predictions(filename, day1, day2, day3, fullname, tournament_name):
             "Gradien Boost Ave": gradient_boosting_average,
             "SVM Ave": SVM_average,
             "LGBM Ave": LGBM_average,
-            "Total Ave": average
+            "Total Ave": average,
+            "R1": day1,
+            "R2": day2,
+            "R3": day3
         })
                 
     print("CSV file created successfully.")
@@ -266,7 +281,7 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
         #API for player ids
         print("Loading Model...")
 
-        req_id = requests.get('http://api.sportradar.us/golf/trial/pga/v3/en/2023/players/profiles.json?api_key=ya2hjdx7bs68uk7mg8heexkw')
+        req_id = requests.get('http://api.sportradar.us/golf/trial/pga/v3/en/2023/players/profiles.json?api_key=b8rb3fgtwdj76yd7vkgr4uy4')
         time.sleep(1) # Wait for 1 second (can't do multiple api calls at once)
 
         player_obj = player()
@@ -285,12 +300,13 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
         #Player not found
         if player_obj.name is None:
             error = "Player '" + target_player_full_name + "' Not Found"
+            print(error)
             return error
 
         else:
 
             #API call to get all data for a player
-            url = f'http://api.sportradar.us/golf/trial/v3/en/players/{player_obj.id}/profile.json?api_key=ya2hjdx7bs68uk7mg8heexkw'
+            url = f'http://api.sportradar.us/golf/trial/v3/en/players/{player_obj.id}/profile.json?api_key=b8rb3fgtwdj76yd7vkgr4uy4'
             player_data = requests.get(url)
             if(player_data.status_code == 200): # Successful request
                 player_data = player_data.json()
@@ -358,9 +374,10 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
                                         setattr(tournament_obj, f"day{i+1}", strokes_data["strokes"])
 
                                     tournament_array.append(tournament_obj)
+
                 if(len(tournament_array) < 3):
-                    print(len(tournament_array))
                     error = "Not enough Data"
+                    print(error)
                     return error
 
                 #Put data into csv file
@@ -418,19 +435,33 @@ def scrape_data():
 
     return players
 
+def csv_already_created(target_player_full_name, target_year, day1, day2, day3, tournament_name):
+    names = target_player_full_name.split()  # Split the full name by whitespace
+    
+    #TODO::Might not work with people with three names eg. Si Woo Kim
+    first_name_initial = names[0][0]  # Extract the first letter of the first name
+    last_name = names[-1] 
+    csv_file = "CSV Folder/" + first_name_initial + "." + last_name + ".csv"
+    course_data = pd.read_csv("CourseData.csv")
+    
+    #Already existing file for player
+    if os.path.exists(csv_file):
+        print("Loading Model...")
+        return predictions(csv_file, day1, day2, day3, target_player_full_name, tournament_name)
+
 # Define the main function
 def main():
     # Prompt the user for input
     
-    """
     players = scrape_data()
     tournament_name = "U.S. Open"
     for player in players:
-        #print(player.name, player.r1)
-        data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, tournament_name)
+        print(player.name)
+        #data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, tournament_name)
+        csv_already_created(player.name, 2023, player.r1, player.r2, player.r3, tournament_name)
+    
     
     """
-    
     target_player_full_name = "Phil Mickelson"
     target_year = 2023
     tournament_name = "U.S. Open"
@@ -438,7 +469,7 @@ def main():
     day2 = 70
     day3 = 67
     data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name)
-    
+    """
     
 # Call the main function to start the program
 if __name__ == "__main__":
