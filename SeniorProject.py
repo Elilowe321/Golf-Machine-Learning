@@ -9,6 +9,10 @@ from bs4 import BeautifulSoup
 import openpyxl
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
+from openpyxl.formatting import Rule
+from openpyxl.styles import Font, PatternFill, Border
+from openpyxl.styles.differential import DifferentialStyle
+from openpyxl.formatting.rule import Rule
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor
@@ -142,9 +146,9 @@ def predictions(filename, day1, day2, day3, day4, fullname, tournament_name):
 
     # Split the data into features (first three rounds) and target variable (fourth game outcome)
     #=========Day1==========
-    X = data[['Yardage', 'Par', 'Rating']]
-    y = data['day1']
-    new_game = [[yarage_value, par_value, rating_value]]
+    #X = data[['Yardage', 'Par', 'Rating']]
+    #y = data['day1']
+    #new_game = [[yarage_value, par_value, rating_value]]
 
     #==========Day2==========
     #X = data[['day1', 'Yardage', 'Par', 'Rating']]
@@ -152,9 +156,9 @@ def predictions(filename, day1, day2, day3, day4, fullname, tournament_name):
     #new_game = [[day1, yarage_value, par_value, rating_value]]
 
     #==========Day3==========
-    #X = data[['Day1', 'Day2', 'Yardage', 'Par', 'Rating']]
-    #y = data['day3']
-    #new_game = [[day1, day2, yarage_value, par_value, rating_value]]
+    X = data[['day1', 'day2', 'Yardage', 'Par', 'Rating']]
+    y = data['day3']
+    new_game = [[day1, day2, yarage_value, par_value, rating_value]]
 
     #==========Day4==========
     #X = data[['day1', 'day2', 'day3', 'Yardage', 'Par', 'Rating']]
@@ -210,7 +214,7 @@ def predictions(filename, day1, day2, day3, day4, fullname, tournament_name):
 
     average = (linear_average + random_forest_average + gradient_boosting_average + LGBM_average + SVM_average) / 5
 
-    filename = "first.xlsx"
+    filename = "third.xlsx"
     fieldnames = ["Name", "Lin Regression", "Random Forest Class", "Random Forest Regress", "Gradient Boost Class",
                 "Gradient Boost Regress", "SVC", "SVR", "LGBMClass", "LGBMRegress", "Linear Ave",
                 "Random Forest Ave", "Gradient Boost Ave", "SVM Ave", "LGBM Ave", "Total Ave", "R1", "R2", "R3", "R4"]
@@ -429,6 +433,22 @@ def scrape_data():
     #loop through and add player to array
     players = []
     for index, row in data.iterrows():
+
+        """
+        #Get everyone including after cut (Good for first 2 days)
+        if(row['PLAYER'].split()[0] != "Projected"):
+            player_data = player()
+            player_data.name = row['PLAYER']
+            player_data.score = row['SCORE']
+            player_data.r1 = row['R1']
+            player_data.r2 = row['R2']
+            player_data.r3 = row['R3']
+            player_data.r4 = row['R4']
+
+            players.append(player_data)
+        """
+        
+        #Get Everyone Before the cut then stops (Good for last 2 days)
         player_data = player()
         player_data.name = row['PLAYER']
         player_data.score = row['SCORE']
@@ -436,15 +456,12 @@ def scrape_data():
         player_data.r2 = row['R2']
         player_data.r3 = row['R3']
         player_data.r4 = row['R4']
-
         players.append(player_data)
 
-        #TODO Figure out
-        if(player_data.name.split()[0] == "Projected"):
+        if(row['PLAYER'].split()[0] == "The"):
             break
-        #if index == 71:
-        #    break
-
+        
+    
     return players
 
 def player_csv_already_created(target_player_full_name, day1, day2, day3, day4, tournament_name):
@@ -461,48 +478,6 @@ def player_csv_already_created(target_player_full_name, day1, day2, day3, day4, 
         print("Loading Model...")
         return predictions(csv_file, day1, day2, day3, day4, target_player_full_name, tournament_name)
 
-    filename = "test.csv"
-    fieldnames = ["Name", "Lin Regression", "Random Forest Class", "Random Forest Regress", "Gradient Boost Class", "Gradient Boost Regress",
-                  "SVC", "SVR", "LGBMClass", "LGBMRegress", "Linear Ave", "Random Forest Ave", "Gradient Boost Ave", "SVM Ave", 
-                  "LGBM Ave", "Total Ave", "R1", "R2", "R3", "R4"]
-
-    # Check if the file exists and has data
-    file_exists = os.path.isfile(filename) and os.path.getsize(filename) > 0
-
-    # Read the existing data from the file
-    existing_data = []
-    if file_exists:
-        with open(filename, mode="r") as file:
-            reader = csv.DictReader(file)
-            existing_data = list(reader)
-
-    # Find the target player's row in the existing data
-    target_player_row = None
-    for row in existing_data:
-        if row["Name"] == target_player_full_name:
-            target_player_row = row
-            break
-
-    # If the target player's row doesn't exist, create a new row
-    if target_player_row is None:
-        target_player_row = {"Name": target_player_full_name}
-
-    # Update the target player's scores
-    target_player_row["R1"] = day1
-    target_player_row["R2"] = day2
-    target_player_row["R3"] = day3
-    target_player_row["R4"] = day4
-
-    # Update the existing data with the modified row
-    if target_player_row not in existing_data:
-        existing_data.append(target_player_row)
-
-    # Write the data back to the file
-    with open(filename, mode="w", newline="") as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(existing_data)
-
 def add_scores_to_xlsx(target_player_full_name, day1, day2, day3, day4):
     filename = "deltas.xlsx"
 
@@ -512,8 +487,7 @@ def add_scores_to_xlsx(target_player_full_name, day1, day2, day3, day4):
 
     # Load the workbook
     workbook = load_workbook(filename)
-
-    worksheet = workbook.worksheets[2]
+    worksheet = workbook.worksheets[3]
 
     # Find the target player's row in the worksheet
     target_player_row_index = None
@@ -560,14 +534,15 @@ def add_scores_to_xlsx(target_player_full_name, day1, day2, day3, day4):
 def main():
     # Prompt the user for input
     
+    """
     players = scrape_data()
     tournament_name = "U.S. Open"
     for player in players:
         print(player.name, player.r1, player.r2, player.r3, player.r4)
-        #data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, player.r4, tournament_name)
-        #player_csv_already_created(player.name, int(player.r1), player.r2, player.r3, player.r4, tournament_name)
+        #data_retrieval(player.name, 2023, int(player.r1), int(player.r2), player.r3, player.r4, tournament_name)
+        #player_csv_already_created(player.name, int(player.r1), int(player.r2), player.r3, player.r4, tournament_name)
         add_scores_to_xlsx(player.name, player.r1, player.r2, player.r3, player.r4)
-
+    """
 
     """
     target_player_full_name = "Phil Mickelson"
@@ -578,6 +553,36 @@ def main():
     day3 = 67
     data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name)
     """
+
+    filename = "ConditionalTest.xlsx"
+
+    # Load the workbook
+    workbook = load_workbook(filename)
+
+    # Select the desired worksheet
+    worksheet = workbook.active
+
+    # Red Fill
+    red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    red_font = Font(color="9C0006")
+
+    # Green Fill
+    green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+    green_font = Font(color="006100")
+
+    # Yellow Fill
+    yellow_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+    yellow_font = Font(color="9C6500")
+
+    differential_style = DifferentialStyle(fill=red_fill, font=red_font)
+
+    # Create a rule with the condition and differential style
+    rule = Rule(type="cellIs", operator="lessThan", formula=["5"], dxf=differential_style)
+    rule.formula = ["$D2<5"]  # Assuming "x+y" column is column D
+    worksheet.conditional_formatting.add(f"D2:D{worksheet.max_row}", rule)
+
+    # Save the workbook
+    workbook.save(filename)
     
 # Call the main function to start the program
 if __name__ == "__main__":
