@@ -6,7 +6,9 @@ import csv
 import os
 import pandas as pd
 from bs4 import BeautifulSoup
+import openpyxl
 from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor
@@ -23,6 +25,7 @@ class player:
         self.r1 = None
         self.r2 = None
         self.r3 = None
+        self.r4 = None
         self.id = None
 
     #Print out obj
@@ -40,6 +43,8 @@ class player:
         return self.r2
     def get_r3(self):
         return self.r3
+    def get_r4(self):
+        return self.r4
     def get_id(self):
         return self.id
 
@@ -56,6 +61,8 @@ class player:
         self.r2 = value
     def r3(self, value):
         self.r3 = value
+    def r4(self, value):
+        self.r4 = value
     def id(self, value):
         self.id = value
 
@@ -116,7 +123,7 @@ class tournament_data:
     def rating(self, value):
         self.rating = value
 
-def predictions(filename, day1, day2, day3, fullname, tournament_name):
+def predictions(filename, day1, day2, day3, day4, fullname, tournament_name):
     # Load the data containing the first three rounds and the corresponding outcomes
     data = pd.read_csv(filename)  # Replace file with your actual data file
     tournament_data = pd.read_csv("CourseData.csv")
@@ -135,29 +142,29 @@ def predictions(filename, day1, day2, day3, fullname, tournament_name):
 
     # Split the data into features (first three rounds) and target variable (fourth game outcome)
     #=========Day1==========
-    #X = data[['Yardage', 'Par', 'Rating']]
-    #y = data['day1']
-    #new_game = [[yarage_value, par_value, rating_value]]
+    X = data[['Yardage', 'Par', 'Rating']]
+    y = data['day1']
+    new_game = [[yarage_value, par_value, rating_value]]
 
     #==========Day2==========
-    X = data[['day1', 'Yardage', 'Par', 'Rating']]
-    y = data['day2']
-    new_game = [[day1, yarage_value, par_value, rating_value]]
+    #X = data[['day1', 'Yardage', 'Par', 'Rating']]
+    #y = data['day2']
+    #new_game = [[day1, yarage_value, par_value, rating_value]]
 
     #==========Day3==========
     #X = data[['Day1', 'Day2', 'Yardage', 'Par', 'Rating']]
     #y = data['day3']
+    #new_game = [[day1, day2, yarage_value, par_value, rating_value]]
 
     #==========Day4==========
     #X = data[['day1', 'day2', 'day3', 'Yardage', 'Par', 'Rating']]
     #y = data['day4']
+    #new_game = [[day1, day2, day3, yarage_value, par_value, rating_value]]
     
 
     # Split the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.1, random_state=42)
-    #new_game = [[day1, day2, day3, yarage_value, par_value, rating_value]]
     
-
 
     #LGBMClassifier, LGBMRegressor
     LGBMClassifier_model = LGBMClassifier()
@@ -203,47 +210,45 @@ def predictions(filename, day1, day2, day3, fullname, tournament_name):
 
     average = (linear_average + random_forest_average + gradient_boosting_average + LGBM_average + SVM_average) / 5
 
-    filename = "test.csv"
-    fieldnames = ["Name", "Lin Regression", "Random Forest Class", "Random Forest Regress", "Gradient Boost Class", "Gradient Boost Regress",
-                  "SVC", "SVR", "LGBMClass", "LGBMRegress", "Linear Ave", "Random Forest Ave", "Gradient Boost Ave", "SVM Ave", 
-                  "LGBM Ave", "Total Ave", "R1", "R2", "R3"]
-    
+    filename = "first.xlsx"
+    fieldnames = ["Name", "Lin Regression", "Random Forest Class", "Random Forest Regress", "Gradient Boost Class",
+                "Gradient Boost Regress", "SVC", "SVR", "LGBMClass", "LGBMRegress", "Linear Ave",
+                "Random Forest Ave", "Gradient Boost Ave", "SVM Ave", "LGBM Ave", "Total Ave", "R1", "R2", "R3", "R4"]
 
-    # Check if the file is empty
-    file_exists = os.path.isfile(filename) and os.path.getsize(filename) > 0
+    # Check if the file exists
+    file_exists = os.path.isfile(filename)
+
+    # Create a new workbook or load an existing one
+    workbook = openpyxl.load_workbook(filename) if file_exists else openpyxl.Workbook()
+
+    # Select the active sheet
+    sheet = workbook.active
+
+    # Write the header row if the file is empty
+    if not file_exists:
+        for col_num, fieldname in enumerate(fieldnames, start=1):
+            col_letter = get_column_letter(col_num)
+            sheet[f"{col_letter}1"] = fieldname
+
+    # Find the next available row
+    next_row = sheet.max_row + 1
+
+    # Write the data row
+    data_row = [fullname, linear_regression_model_prediction[0], random_forest_classifier_model_prediction[0],
+                random_forest_regressor_model_prediction[0], gradien_boosting_classifier_model_prediction[0],
+                gradient_boosting_regressor_model_prediction[0], svc_model_prediction[0], svr_model_prediction[0],
+                LGBMClassifier_model_prediction[0], LGBMRegressor_model_prediction[0], linear_average,
+                random_forest_average, gradient_boosting_average, SVM_average, LGBM_average, average, day1, day2, day3, day4]
+
+    for col_num, value in enumerate(data_row, start=1):
+        col_letter = get_column_letter(col_num)
+        sheet[f"{col_letter}{next_row}"] = value
+
+    # Save the workbook
+    workbook.save(filename)
+    print("Excel file created successfully.")
 
 
-    with open(filename, mode="a", newline="") as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-
-        # Write the header only if the file is empty
-        if not file_exists:
-            writer.writeheader()
-
-        writer.writerow({
-            "Name": fullname,
-            "Lin Regression": linear_regression_model_prediction[0],
-            "Random Forest Class": random_forest_classifier_model_prediction[0],
-            "Random Forest Regress": random_forest_regressor_model_prediction[0],
-            "Gradient Boost Class": gradien_boosting_classifier_model_prediction[0],
-            "Gradient Boost Regress": gradient_boosting_regressor_model_prediction[0],
-            "SVC": svc_model_prediction[0],
-            "SVR": svr_model_prediction[0],
-            "LGBMClass": LGBMClassifier_model_prediction[0],
-            "LGBMRegress":LGBMRegressor_model_prediction[0],
-            "Linear Ave": linear_average,
-            "Random Forest Ave": random_forest_average,
-            "Gradient Boost Ave": gradient_boosting_average,
-            "SVM Ave": SVM_average,
-            "LGBM Ave": LGBM_average,
-            "Total Ave": average,
-            "R1": day1,
-            "R2": day2,
-            "R3": day3
-        })
-                
-    print("CSV file created successfully.")
-    
     #return svr_model_prediction[0]
 
     #MLP does different values every time
@@ -264,7 +269,7 @@ def predictions(filename, day1, day2, day3, fullname, tournament_name):
     """
     print("LGBM Average = ", LGBM_average)
 
-def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name):
+def data_retrieval(target_player_full_name, target_year, day1, day2, day3, day4, tournament_name):
 
     names = target_player_full_name.split()  # Split the full name by whitespace
     
@@ -277,7 +282,7 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
     #Already existing file for player
     if os.path.exists(csv_file):
         print("Loading Model...")
-        return predictions(csv_file, day1, day2, day3, target_player_full_name, tournament_name)
+        return predictions(csv_file, day1, day2, day3, day4, target_player_full_name, tournament_name)
     
     #No existing model
     else:
@@ -409,7 +414,7 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, tourn
                 print("CSV file created successfully.")
 
 
-            return predictions(filename, day1, day2, day3, target_player_full_name, tournament_name)
+            return predictions(filename, day1, day2, day3, day4, target_player_full_name, tournament_name)
 
 def scrape_data():
     #Get leaderboad through espn
@@ -430,6 +435,7 @@ def scrape_data():
         player_data.r1 = row['R1']
         player_data.r2 = row['R2']
         player_data.r3 = row['R3']
+        player_data.r4 = row['R4']
 
         players.append(player_data)
 
@@ -441,7 +447,7 @@ def scrape_data():
 
     return players
 
-def csv_already_created(target_player_full_name, day1, day2, day3, tournament_name):
+def player_csv_already_created(target_player_full_name, day1, day2, day3, day4, tournament_name):
     names = target_player_full_name.split()  # Split the full name by whitespace
     
     #TODO::Might not work with people with three names eg. Si Woo Kim
@@ -453,13 +459,12 @@ def csv_already_created(target_player_full_name, day1, day2, day3, tournament_na
     #Already existing file for player
     if os.path.exists(csv_file):
         print("Loading Model...")
-        return predictions(csv_file, day1, day2, day3, target_player_full_name, tournament_name)
+        return predictions(csv_file, day1, day2, day3, day4, target_player_full_name, tournament_name)
 
-def add_scores_to_csv(target_player_full_name, day1, day2, day3):
     filename = "test.csv"
     fieldnames = ["Name", "Lin Regression", "Random Forest Class", "Random Forest Regress", "Gradient Boost Class", "Gradient Boost Regress",
                   "SVC", "SVR", "LGBMClass", "LGBMRegress", "Linear Ave", "Random Forest Ave", "Gradient Boost Ave", "SVM Ave", 
-                  "LGBM Ave", "Total Ave", "R1", "R2", "R3"]
+                  "LGBM Ave", "Total Ave", "R1", "R2", "R3", "R4"]
 
     # Check if the file exists and has data
     file_exists = os.path.isfile(filename) and os.path.getsize(filename) > 0
@@ -486,6 +491,7 @@ def add_scores_to_csv(target_player_full_name, day1, day2, day3):
     target_player_row["R1"] = day1
     target_player_row["R2"] = day2
     target_player_row["R3"] = day3
+    target_player_row["R4"] = day4
 
     # Update the existing data with the modified row
     if target_player_row not in existing_data:
@@ -497,35 +503,57 @@ def add_scores_to_csv(target_player_full_name, day1, day2, day3):
         writer.writeheader()
         writer.writerows(existing_data)
 
-
-def add_scores_to_xlsx(target_player_full_name, day1, day2, day3):
+def add_scores_to_xlsx(target_player_full_name, day1, day2, day3, day4):
     filename = "deltas.xlsx"
+
+    fieldnames = ["Name", "Lin Regression", "Random Forest Class", "Random Forest Regress", "Gradient Boost Class", "Gradient Boost Regress",
+              "SVC", "SVR", "LGBMClass", "LGBMRegress", "Linear Ave", "Random Forest Ave", "Gradient Boost Ave", "SVM Ave", 
+              "LGBM Ave", "Total Ave", "R1", "R2", "R3", "R4"]
 
     # Load the workbook
     workbook = load_workbook(filename)
 
-    # Select the desired worksheet
-    worksheet = workbook.active
+    worksheet = workbook.worksheets[2]
 
     # Find the target player's row in the worksheet
     target_player_row_index = None
     for i, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
         if row[0] == target_player_full_name:
             target_player_row_index = i
-
-            # Convert the string numbers to the desired numeric type
-            day1 = int(day1)
-            day2 = int(day2)
-            day3 = int(day3)
-
-            # Update the target player's scores
-            worksheet.cell(row=target_player_row_index, column=17, value=day1)  # R1 column
-            worksheet.cell(row=target_player_row_index, column=18, value=day2)  # R2 column
-            worksheet.cell(row=target_player_row_index, column=19, value=day3)  # R3 column
             break
 
-    # Save the workbook
-    workbook.save(filename)
+    # Check if the target player's row is found
+    if target_player_row_index is not None:
+        # Convert the string numbers to the desired numeric type
+
+        try:
+            day1 = int(day1)
+        except (ValueError, TypeError):
+            day1 = 0
+
+        try:
+            day2 = int(day2)
+        except (ValueError, TypeError):
+            day2 = 0
+
+        try:
+            day3 = int(day3)
+        except (ValueError, TypeError):
+            day3 = 0
+
+        try:
+            day4 = int(day4)
+        except (ValueError, TypeError):
+            day4 = 0
+
+        # Update the target player's scores for the new rounds
+        worksheet.cell(row=target_player_row_index, column=fieldnames.index("R1") + 1, value=day1)  # R1 column
+        worksheet.cell(row=target_player_row_index, column=fieldnames.index("R2") + 1, value=day2)  # R2 column
+        worksheet.cell(row=target_player_row_index, column=fieldnames.index("R3") + 1, value=day3)  # R3 column
+        worksheet.cell(row=target_player_row_index, column=fieldnames.index("R4") + 1, value=day4)  # R4 column
+
+        # Save the workbook
+        workbook.save(filename)
 
 
 # Define the main function
@@ -535,11 +563,11 @@ def main():
     players = scrape_data()
     tournament_name = "U.S. Open"
     for player in players:
-        print(player.name)
-        #data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, tournament_name)
-        #csv_already_created(player.name, int(player.r1), player.r2, player.r3, tournament_name)
-        add_scores_to_xlsx(player.name, player.r1, 2, 3)
-        
+        print(player.name, player.r1, player.r2, player.r3, player.r4)
+        #data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, player.r4, tournament_name)
+        #player_csv_already_created(player.name, int(player.r1), player.r2, player.r3, player.r4, tournament_name)
+        add_scores_to_xlsx(player.name, player.r1, player.r2, player.r3, player.r4)
+
 
     """
     target_player_full_name = "Phil Mickelson"
