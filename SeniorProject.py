@@ -127,12 +127,13 @@ class tournament_data:
     def rating(self, value):
         self.rating = value
 
+##
+# Function to predict the last day of the tournament for a player
+##
 def predictions(filename, day1, day2, day3, day4, fullname, tournament_name):
     # Load the data containing the first three rounds and the corresponding outcomes
     data = pd.read_csv(filename)  # Replace file with your actual data file
     tournament_data = pd.read_csv("CourseData.csv")
-
-    #TODO:: If it is a major besides the masters, need to imput manually
 
     # Filter rows based on a condition (e.g., tournament_name equals "Tournament A")
     filtered_rows = tournament_data[tournament_data['Tournament Name'] == tournament_name]
@@ -156,14 +157,15 @@ def predictions(filename, day1, day2, day3, day4, fullname, tournament_name):
     #new_game = [[day1, yarage_value, par_value, rating_value]]
 
     #==========Day3==========
-    X = data[['day1', 'day2', 'Yardage', 'Par', 'Rating']]
-    y = data['day3']
-    new_game = [[day1, day2, yarage_value, par_value, rating_value]]
+    #X = data[['day1', 'day2', 'Yardage', 'Par', 'Rating']]
+    #y = data['day3']
+    #new_game = [[day1, day2, yarage_value, par_value, rating_value]]
 
     #==========Day4==========
     #X = data[['day1', 'day2', 'day3', 'Yardage', 'Par', 'Rating']]
-    #y = data['day4']
-    #new_game = [[day1, day2, day3, yarage_value, par_value, rating_value]]
+    X = data[['Yardage', 'Par', 'Rating']]
+    y = data['day4']
+    new_game = [[day1, day2, day3, yarage_value, par_value, rating_value]]
     
 
     # Split the data into training and testing sets
@@ -214,7 +216,7 @@ def predictions(filename, day1, day2, day3, day4, fullname, tournament_name):
 
     average = (linear_average + random_forest_average + gradient_boosting_average + LGBM_average + SVM_average) / 5
 
-    filename = "third.xlsx"
+    filename = "fourth.xlsx"
     fieldnames = ["Name", "Lin Regression", "Random Forest Class", "Random Forest Regress", "Gradient Boost Class",
                 "Gradient Boost Regress", "SVC", "SVR", "LGBMClass", "LGBMRegress", "Linear Ave",
                 "Random Forest Ave", "Gradient Boost Ave", "SVM Ave", "LGBM Ave", "Total Ave", "R1", "R2", "R3", "R4"]
@@ -273,6 +275,9 @@ def predictions(filename, day1, day2, day3, day4, fullname, tournament_name):
     """
     print("LGBM Average = ", LGBM_average)
 
+##
+# Functions that gets a players past tournament data and puts it into a csv for easy reading
+##
 def data_retrieval(target_player_full_name, target_year, day1, day2, day3, day4, tournament_name):
 
     names = target_player_full_name.split()  # Split the full name by whitespace
@@ -365,7 +370,6 @@ def data_retrieval(target_player_full_name, target_year, day1, day2, day3, day4,
                             else:  
 
                                 #Get Tournament data 
-                                #TODO:: Doesn't work for majors besides Masters
                                 tournament_obj = tournament_data()
                                 tournament_obj.name = tournament["name"]
 
@@ -487,7 +491,7 @@ def add_scores_to_xlsx(target_player_full_name, day1, day2, day3, day4):
 
     # Load the workbook
     workbook = load_workbook(filename)
-    worksheet = workbook.worksheets[3]
+    worksheet = workbook.worksheets[4]
 
     # Find the target player's row in the worksheet
     target_player_row_index = None
@@ -534,15 +538,17 @@ def add_scores_to_xlsx(target_player_full_name, day1, day2, day3, day4):
 def main():
     # Prompt the user for input
     
-    """
-    players = scrape_data()
+    
+    #players = scrape_data()
     tournament_name = "U.S. Open"
-    for player in players:
-        print(player.name, player.r1, player.r2, player.r3, player.r4)
+    data_retrieval("Rory McIlroy", 2023, 0, 0, 0, 0, tournament_name)
+
+    #for player in players:
+        #print(player.name, player.r1, player.r2, player.r3, player.r4)
         #data_retrieval(player.name, 2023, int(player.r1), int(player.r2), player.r3, player.r4, tournament_name)
-        #player_csv_already_created(player.name, int(player.r1), int(player.r2), player.r3, player.r4, tournament_name)
-        add_scores_to_xlsx(player.name, player.r1, player.r2, player.r3, player.r4)
-    """
+        #player_csv_already_created(player.name, int(player.r1), int(player.r2), int(player.r3), player.r4, tournament_name)
+        #add_scores_to_xlsx(player.name, player.r1, player.r2, player.r3, player.r4)
+    
 
     """
     target_player_full_name = "Phil Mickelson"
@@ -554,6 +560,7 @@ def main():
     data_retrieval(target_player_full_name, target_year, day1, day2, day3, tournament_name)
     """
 
+    """    
     filename = "ConditionalTest.xlsx"
 
     # Load the workbook
@@ -574,7 +581,7 @@ def main():
     yellow_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
     yellow_font = Font(color="9C6500")
 
-    differential_style = DifferentialStyle(fill=red_fill, font=red_font)
+    differential_style = DifferentialStyle(fill=green_fill, font=green_font)
 
     # Create a rule with the condition and differential style
     rule = Rule(type="cellIs", operator="lessThan", formula=["5"], dxf=differential_style)
@@ -583,6 +590,8 @@ def main():
 
     # Save the workbook
     workbook.save(filename)
+    """
+    
     
 # Call the main function to start the program
 if __name__ == "__main__":
