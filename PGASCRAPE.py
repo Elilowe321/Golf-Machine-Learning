@@ -1,7 +1,12 @@
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
 import json
+import requests
+import pandas as pd
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 #This is player obj for day 1-4
 """
@@ -57,40 +62,59 @@ class player:
 
 #Player obj for tour data (projected winner type stuff)
 class player:
-
     def __init__(self):
         self.id = None
         self.name = None
         self.first_name = None
         self.last_name = None
-        
+        self.stats = []
 
-    #Print out obj
+    # Print out obj including stats
     def __str__(self):
-        return f"player(name={self.name} )"
+        return f"Player(name={self.name}, stats={self.stats})"
 
-    #Getter methods
+    # Getter methods
     def get_id(self):
         return self.id
+
     def get_name(self):
         return self.name
+
     def get_first_name(self):
         return self.first_name
+
     def get_last_name(self):
         return self.last_name
 
-    #Setter methods
-    def id(self, value):
+    def get_stats(self):
+        return self.stats
+
+    # Setter methods
+    def set_id(self, value):
         self.id = value
-    def name(self, value):
+
+    def set_name(self, value):
         self.name = value
-    def first_name(self, value):
+
+    def set_first_name(self, value):
         self.first_name = value
-    def last_name(self, value):
+
+    def set_last_name(self, value):
         self.last_name = value
 
+    def add_stat(self, stat):
+        self.stats.append(stat)
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 #Get leaderboad through espn scaping
-url = 'https://www.espn.com/golf/leaderboard'
+#url = 'https://www.espn.com/golf/leaderboard'
+url = 'https://www.espn.com/golf/leaderboard/_/tournamentId/401465533'
 response = requests.get(url)
 html = response.text
 soup = BeautifulSoup(html, 'html.parser')
@@ -148,6 +172,48 @@ if response.status_code == 200:
         for i in tour_players:
             if i["displayName"] in espn_names_dict:
 
+                # Create a WebDriver instance with the Chrome options
+                driver = webdriver.Chrome()
+
+                # Navigate to the desired URL
+                driver.get(f"https://www.pgatour.com/player/{i['id']}/{i['firstName']}-{i['lastName']}/stats")
+
+                # Get the page source
+                # Wait for the element to be present
+                wait = WebDriverWait(driver, 10)  # Wait for a maximum of 10 seconds
+                element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="tabs-:rf:--tabpanel-4"]/div/div/div[3]/div[2]/div[6]/div/div[2]/div/div/table')))
+
+                data = element.text
+                lines = data.split('\n')
+
+                player_data = player()
+                player_data.name = i['firstName']
+                for i in range(5, len(lines)):
+                    if i + 3 < len(lines):  # Check if there are enough lines available
+
+                        # Check if the next line contains a bracket
+                        if lines[i].startswith('(') or lines[i+1].startswith('(') or lines[i+2].startswith('(') or lines[i+3].startswith('('):
+                            i += 3  # Skip the current line and the next line
+                        else:
+
+                            if not is_number(lines[i]) and '%' not in lines[i] and '-' not in lines[i]:
+                                stat = {
+                                    'STAT': lines[i].strip(),
+                                    'VALUE': lines[i+1].strip() if lines[i+1] != '-' else 'No Value',
+                                    'RANK': lines[i+2].strip() if lines[i+2] != '-' else 'Unranked'
+                                }
+                                player_data.stats.append(stat)
+                                
+                for stats in player_data.stats:
+                    print(stats)
+
+                # Close the WebDriver
+                driver.quit()
+
+
+
+
+                """
                 # Send a GET request to the players page
                 response = requests.get(f"https://www.pgatour.com/player/{i['id']}/{i['firstName']}-{i['lastName']}/stats")
 
@@ -157,4 +223,5 @@ if response.status_code == 200:
                     print(i['id'], i['displayName'])
                 else:
                     print("fail")
+                """
 
