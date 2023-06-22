@@ -5,8 +5,18 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
+from pymongo import MongoClient
 
+# Construct the connection string with the correct credentials
+username = "elilowe321"
+password = "Th0rbr0ver12"
+connection_string = f"mongodb+srv://elilowe321:Th0rbr0ver12@golfsim.elk3ata.mongodb.net/"
+
+client = MongoClient(connection_string)
+db = client['bet_db']
+mycol = db["players"]
 
 #This is player obj for day 1-4
 """
@@ -169,8 +179,13 @@ if response.status_code == 200:
         espn_names_dict = {player.name: player for player in espn_players}  
 
         #Loop through tour players and get ID to scrape stats
+        db_players = []
+        count = 0
         for i in tour_players:
+            if count > 10:
+                break
             if i["displayName"] in espn_names_dict:
+                count+=1
 
                 # Create a WebDriver instance with the Chrome options
                 driver = webdriver.Chrome()
@@ -180,34 +195,40 @@ if response.status_code == 200:
 
                 # Get the page source
                 # Wait for the element to be present
-                wait = WebDriverWait(driver, 10)  # Wait for a maximum of 10 seconds
-                element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="tabs-:rf:--tabpanel-4"]/div/div/div[3]/div[2]/div[6]/div/div[2]/div/div/table')))
+                try:
+                    wait = WebDriverWait(driver, 10)  # Wait for a maximum of 10 seconds
+                    element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="tabs-:rf:--tabpanel-4"]/div/div/div[3]/div[2]/div[6]/div/div[2]/div/div/table')))
 
-                data = element.text
-                lines = data.split('\n')
+                    data = element.text
+                    lines = data.split('\n')
 
-                player_data = player()
-                player_data.name = i['firstName']
-                for i in range(5, len(lines)):
-                    if i + 3 < len(lines):  # Check if there are enough lines available
+                    player_data = player()
+                    player_data.id = i['id']
+                    player_data.name = i['displayName']
+                    player_data.first_name = i['firstName']
+                    player_data.last_name = i['lastName']
+                    for i in range(5, len(lines)):
+                        if i + 3 < len(lines):  # Check if there are enough lines available
 
-                        # Check if the next line contains a bracket
-                        if lines[i].startswith('(') or lines[i+1].startswith('(') or lines[i+2].startswith('(') or lines[i+3].startswith('('):
-                            i += 3  # Skip the current line and the next line
-                        else:
+                            # Check if the next line contains a bracket
+                            if lines[i].startswith('(') or lines[i+1].startswith('(') or lines[i+2].startswith('(') or lines[i+3].startswith('('):
+                                i += 3  # Skip the current line and the next line
+                            else:
 
-                            if not is_number(lines[i]) and '%' not in lines[i] and '-' not in lines[i]:
-                                stat = {
-                                    'STAT': lines[i].strip(),
-                                    'VALUE': lines[i+1].strip() if lines[i+1] != '-' else 'No Value',
-                                    'RANK': lines[i+2].strip() if lines[i+2] != '-' else 'Unranked'
-                                }
-                                player_data.stats.append(stat)
-                                
-                for stats in player_data.stats:
-                    print(stats)
+                                if not is_number(lines[i]) and '%' not in lines[i] and '-' not in lines[i]:
+                                    stat = {
+                                        'STAT': lines[i].strip(),
+                                        'VALUE': lines[i+1].strip() if lines[i+1] != '-' else 'No Value',
+                                        'RANK': lines[i+2].strip() if lines[i+2] != '-' else 'Unranked'
+                                    }
+                                    player_data.stats.append(stat)
 
-                # Close the WebDriver
-                driver.quit()
+                    db_players.append(vars(player_data))  
+                    driver.quit()
+                except TimeoutException as ex:
+                    print("TimeoutException occurred:", ex)
+                    continue
 
+
+        result = mycol.insert_many(db_players)
 
