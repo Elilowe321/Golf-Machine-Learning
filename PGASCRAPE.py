@@ -211,17 +211,3 @@ if response.status_code == 200:
                 driver.quit()
 
 
-
-
-                """
-                # Send a GET request to the players page
-                response = requests.get(f"https://www.pgatour.com/player/{i['id']}/{i['firstName']}-{i['lastName']}/stats")
-
-                if response.status_code == 200:
-                    # Create BeautifulSoup object from the HTML content
-                    soup = BeautifulSoup(response.content, 'html.parser')
-                    print(i['id'], i['displayName'])
-                else:
-                    print("fail")
-                """
-
