@@ -162,8 +162,7 @@ def predictions(filename, day1, day2, day3, day4, fullname, tournament_name):
     #new_game = [[day1, day2, yarage_value, par_value, rating_value]]
 
     #==========Day4==========
-    #X = data[['day1', 'day2', 'day3', 'Yardage', 'Par', 'Rating']]
-    X = data[['Yardage', 'Par', 'Rating']]
+    X = data[['day1', 'day2', 'day3', 'Yardage', 'Par', 'Rating']]
     y = data['day4']
     new_game = [[day1, day2, day3, yarage_value, par_value, rating_value]]
     
@@ -492,6 +491,7 @@ def add_scores_to_xlsx(target_player_full_name, day1, day2, day3, day4):
     # Load the workbook
     workbook = load_workbook(filename)
     worksheet = workbook.worksheets[4]
+    #print(worksheet.title)
 
     # Find the target player's row in the worksheet
     target_player_row_index = None
@@ -539,15 +539,16 @@ def main():
     # Prompt the user for input
     
     
-    #players = scrape_data()
-    tournament_name = "U.S. Open"
-    data_retrieval("Rory McIlroy", 2023, 0, 0, 0, 0, tournament_name)
+    players = scrape_data()
+    tournament_name = "Travelers Championship"
+    #data_retrieval("Rory McIlroy", 2023, 0, 0, 0, 0, tournament_name)
 
-    #for player in players:
+    for player in players:
+        print(player.name)
         #print(player.name, player.r1, player.r2, player.r3, player.r4)
-        #data_retrieval(player.name, 2023, int(player.r1), int(player.r2), player.r3, player.r4, tournament_name)
+        #data_retrieval(player.name, 2023, player.r1, player.r2, player.r3, player.r4, tournament_name)
         #player_csv_already_created(player.name, int(player.r1), int(player.r2), int(player.r3), player.r4, tournament_name)
-        #add_scores_to_xlsx(player.name, player.r1, player.r2, player.r3, player.r4)
+        add_scores_to_xlsx(player.name, player.r1, player.r2, player.r3, player.r4)
     
 
     """
